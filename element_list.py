@@ -1,9 +1,10 @@
 import os, json
 from enum import Enum
 
+
 class ElementList:
     """ represents an Element List"""
-    srt_format = "{seq}\n{start_time} --> {end_time}\n{lines}\n\n"
+    srt_format = "{}\n{}\n\n"
 
     def __init__(self, file):
         obj = json.load(file)
@@ -11,73 +12,62 @@ class ElementList:
         self.start_time = obj['start_time']
         self.end_time = obj['end_time']
         self.language = obj['language']
-        self.segments = []
-        for segment in obj['segments']:
-            self.segments.append(Segment(segment))
         self.keywords = obj['keywords'] if hasattr(obj, 'keywords') else {}
         self.topics = obj['topics'] if hasattr(obj, 'topics') else {}
         self.entities = obj['entities'] if hasattr(obj, 'entities') else {}
-        self.speakers = []
+        self.speakers = {}
         for speaker in obj['speakers']:
-            self.speakers.append(Speaker(speaker))
+            speaker = Speaker(speaker)
+            self.speakers[speaker.id] = speaker
+        self.segments = []
+        for segment in obj['segments']:
+            self.segments.append(Segment(segment, self.speakers))
 
-    def to_srt(self):
+    def __str__(self):
         output = ""
-        for seq in range(0, len(self.segments)):
-            output += ElementList.srt_format.format(self.segments[seq])
+        for seq in range(1, len(self.segments) + 1):
+            output += ElementList.srt_format.format(seq, self.segments[seq - 1])
+        return output
 
-
-    def __str__(self):
-        string = "version = {}\nstart_time = {}\nend_time = {}\nlanguage = {}\n"
-        string += "segments = {}\nkeywords = {}\ntopics = {}\nentities = {}\nspeakers = {}"
-        return string.format(self.version, self.start_time, self.end_time, self.language,
-                             self.segments, self.keywords,self.topics, self.entities,
-                             self.speakers)
-
-class Gender(Enum):
-    MALE = "MALE"
-    FEMALE = "FEMALE"
-    UNKNOWN = "UNKNOWN"
-
-
-class Speaker:
-    """ represents a speaker """
-
-    def __init__(self, speaker):
-        self.id = speaker['id']
-        self.name = speaker['name']
-        self.gender = Gender[speaker['gender']]
-
-    def __str__(self):
-        return "id: {}\nname: {}\ngender: {}".format(self.id, self.name, self.gender)
 
 class Segment:
     """ represents a segment"""
 
-    def __init__(self, segment):
+    def __init__(self, segment, speakers):
         self.speaker_change = segment['speaker_change']
         self.speaker_id = segment['speaker_id'] if 'speaker_id' in segment else None
         self.interpolated = segment['interpolated'] if 'interpolated' in segment else None
         self.start_time = segment['start_time']
         self.end_time = segment['end_time']
         self.style = segment['style'] if 'style' in segment else None
+        speaker = speakers[self.speaker_id] if self.speaker_change else None
         self.sequences = []
         for sequence in segment['sequences']:
-            self.sequences.append(Sequence(sequence))
+            self.sequences.append(Sequence(sequence, speaker))
+
+    def __str__(self):
+        return '\n'.join(str(x) for x in self.sequences)
 
 
 class Sequence:
     """ represents a sequence """
 
-    def __init__(self, sequence):
-        self.name = sequence['name']
+    def __init__(self, sequence, speaker):
+        self.interpolated = sequence['interpolated'] if 'interpolated' in sequence else None
         self.start_time = sequence['start_time']
         self.end_time = sequence['end_time']
         self.confidence_score = sequence['confidence_score'] if 'confidence_score' in sequence else None
         self.tokens = []
+        self.speaker = '[{}]'.format(speaker) if speaker is not None else ''
         for token in sequence['tokens']:
             self.tokens.append(Token(token))
         self.style = sequence['style'] if 'style' in sequence else None
+
+    def __str__(self):
+        start = ms_to_timestamp(self.start_time)
+        end = ms_to_timestamp(self.end_time)
+        lines = ' '.join(str(x) for x in self.tokens)
+        return '{} --> {} {}\n{}'.format(start, end, self.speaker, lines)
 
 
 class Token:
@@ -92,3 +82,26 @@ class Token:
         self.display_as = token['display_as']
         self.tags = token['tags']
         self.style = token['style'] if 'style' in token else None
+
+    def __str__(self):
+        return self.display_as
+
+
+
+class Speaker:
+    """ represents a speaker """
+
+    def __init__(self, speaker):
+        self.id = speaker['id']
+        self.name = speaker['name']
+        self.gender = speaker['gender']
+
+
+
+
+def ms_to_timestamp(ms):
+    s, mms = divmod(ms, 1000)
+    m, s = divmod(s, 60)
+    h, m = divmod(m, 60)
+
+    return "{}:{}:{},{}".format(h, m, s, mms)
