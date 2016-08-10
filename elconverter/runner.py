@@ -7,7 +7,6 @@ class Runner:
         self.directory = directory
         self.include_speakers = include_speakers
         self.include_tags = include_tags
-        self.element_lists = []
         self.run()
 
     def run(self):
