@@ -1,5 +1,4 @@
 import json
-from enum import Enum
 
 
 class ElementList:
@@ -22,8 +21,8 @@ class ElementList:
         for segment in obj['segments']:
             self.segments.append(Segment(segment, self.speakers))
 
-    def __str__(self):
-        return ''.join(map(lambda x: str(x), self.segments))
+    def convert(self, include_speakers, include_tags):
+        return ''.join(map(lambda x: x.convert(include_speakers, include_tags), self.segments))
 
 
 class Segment:
@@ -41,13 +40,13 @@ class Segment:
         for sequence in segment['sequences']:
             self.sequences.append(Sequence(sequence))
 
-    def __str__(self):
+    def convert(self, include_speakers, include_tags):
         blocks = []
         line = ''
         lines = []
         start = self.start_time
         for i, s in enumerate(self.sequences):
-            if i == 0 and self.speaker_change:
+            if include_speakers and i == 0 and self.speaker_change:
                 line = '[{}] '.format(self.speaker)
             for t in s.tokens:
                 if start is None:
