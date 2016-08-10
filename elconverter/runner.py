@@ -1,5 +1,5 @@
-import glob, os
-from element_list import ElementList
+import glob, os, sys
+from .helpers import ElementList
 
 
 class Runner:
@@ -13,7 +13,8 @@ class Runner:
     def run(self):
         json_files = glob.glob(os.path.join(self.directory, "*.json"))
         if len(json_files) is 0:
-            raise "No JSON files found to convert"
+            print("No JSON files found to convert", file=sys.stderr)
+            sys.exit(2)
         for json in json_files:
             with open(json, 'r') as f:
                 self.element_lists.append(ElementList(f))
