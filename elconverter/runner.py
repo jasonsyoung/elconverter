@@ -1,4 +1,4 @@
-import glob, os, sys
+import glob, os, sys, zipfile
 from .helpers import ElementList
 
 
@@ -15,9 +15,21 @@ class Runner:
         if len(json_files) is 0:
             print("No JSON files found to convert", file=sys.stderr)
             sys.exit(2)
+
+        files = []
         for json in json_files:
             with open(json, 'r') as f:
-                self.element_lists.append(ElementList(f))
+                el = ElementList(f)
+            with open(os.path.splitext(json)[0] + '.srt', 'r') as f:
+                f.write(el.to_srt(self.include_speakers, self.include_tags))
+                files.append(f.name)
 
-        print("Found {} element list files".format(len(self.element_lists)))
-        print(str(self.element_lists[0]))
+        if len(files) > 1:
+            zipf = zipfile.ZipFile(self.directory + '.zip', 'w', zipfile.ZIP_DEFLATED)
+            for f in files:
+                path = os.path.realpath(f)
+                zipf.write(path)
+            zipf.close()
+            print("Wrote {} files to {}".format(len(files), self.directory + '.zip'))
+        else:
+            print("Created {}", files[0])

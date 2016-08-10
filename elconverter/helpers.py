@@ -21,7 +21,7 @@ class ElementList:
         for segment in obj['segments']:
             self.segments.append(Segment(segment, self.speakers))
 
-    def convert(self, include_speakers, include_tags):
+    def to_srt(self, include_speakers, include_tags):
         return ''.join(map(lambda x: x.convert(include_speakers, include_tags), self.segments))
 
 

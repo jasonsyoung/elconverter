@@ -10,7 +10,7 @@ directory and converts them to SRT caption format
 
 import os, sys
 from optparse import OptionParser
-from runner import Runner
+from elconverter.runner import Runner
 
 def main():
     usage = "usage: %prog [options] source_directory"
