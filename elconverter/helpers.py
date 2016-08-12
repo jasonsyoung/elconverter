@@ -6,13 +6,8 @@ class ElementList:
 
     def __init__(self, file):
         obj = json.load(file)
-        # self.version = obj['version']
         self.start_time = obj['start_time']
         self.end_time = obj['end_time']
-        # self.language = obj['language']
-        # self.keywords = obj['keywords'] if hasattr(obj, 'keywords') else {}
-        # self.topics = obj['topics'] if hasattr(obj, 'topics') else {}
-        self.entities = obj['entities'] if hasattr(obj, 'entities') else {}
         self.speakers = {}
         for speaker in obj['speakers']:
             speaker = Speaker(speaker)
@@ -22,25 +17,29 @@ class ElementList:
             self.segments.append(Segment(segment, self.speakers))
 
     def to_srt(self, include_speakers, include_tags):
-        return ''.join(map(lambda x: x.convert(include_speakers, include_tags), self.segments))
+        subtitles = ''
+        index = 1
+        for a, b in enumerate(x.to_list(include_speakers, include_tags) for x in self.segments):
+            for c in b:
+                subtitles += '{}\n{}\n\n'.format(index, c)
+                index += 1
+        return subtitles
 
 
 class Segment:
     """ represents a segment"""
+    LINE_LENGTH = 32
 
     def __init__(self, segment, speakers):
         self.speaker_change = segment['speaker_change']
         self.speaker_id = segment['speaker_id'] if 'speaker_id' in segment else None
-        # self.interpolated = segment['interpolated'] if 'interpolated' in segment else None
         self.start_time = segment['start_time']
-        # self.end_time = segment['end_time']
-        # self.style = segment['style'] if 'style' in segment else None
         self.speaker = speakers[self.speaker_id].name if self.speaker_change else None
         self.sequences = []
         for sequence in segment['sequences']:
             self.sequences.append(Sequence(sequence))
 
-    def convert(self, include_speakers, include_tags):
+    def to_list(self, include_speakers, include_tags):
         blocks = []
         line = ''
         lines = []
@@ -51,7 +50,12 @@ class Segment:
             for t in s.tokens:
                 if start is None:
                     start = t.start_time
-                if t.type != 'punctuation' and len(line) + len(t.display_as) > 32:
+
+                next_token = str(t)
+                if include_tags and len(t.tags) > 0 and t.tags[0] != Token.TYPE_END_SENTENCE:
+                    next_token = '[{}] {}'.format(t.tags[0], str(t))
+
+                if t.type != Token.TYPE_PUNCTUATION and len(line) + len(next_token) > Segment.LINE_LENGTH:
                     if len(lines) == 0:
                         lines.append(line.lstrip())
                         line = ''
@@ -63,21 +67,18 @@ class Segment:
                         line = ''
 
                 if t.type == 'punctuation':
-                    line = line.rstrip() + t.display_as
+                    line = line.rstrip() + next_token
                 elif len(line) == 0:
-                    line += str(t)
+                    line += next_token
                 else:
-                    line += ' {}'.format(t)
+                    line += ' {}'.format(next_token)
 
                 end = t.end_time
 
         lines.append(line.lstrip())
         blocks.append(SRT(start, end, lines))
 
-        output = []
-        for i, b in enumerate(blocks):
-            output.append('{}\n{}\n\n'.format(i + 1, b))
-        return ''.join(output)
+        return map(lambda x: str(x), blocks)
 
 
 class SRT:
@@ -107,6 +108,10 @@ class Sequence:
 class Token:
     """ represents a token """
 
+    TYPE_PUNCTUATION = 'punctuation'
+    TYPE_END_SENTENCE = 'ENDS_SENTENCE'
+
+
     def __init__(self, token):
         self.interpolated = token['interpolated']
         self.start_time = token['start_time']
@@ -118,7 +123,7 @@ class Token:
         self.style = token['style'] if 'style' in token else None
 
     def __str__(self):
-        return self.display_as
+        return self.display_as if len(self.display_as) > 0 else self.value
 
 
 

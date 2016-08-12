@@ -12,11 +12,12 @@ import os, sys
 from optparse import OptionParser
 from elconverter.runner import Runner
 
+
 def main():
     usage = "usage: %prog [options] source_directory"
     parser = OptionParser(usage=usage)
-    parser.add_option("-s", "--include-speaker", action="store_true", dest="include_speaker")
-    parser.add_option("-t", "--exclude-tags", action="store_false", dest="include_soundtags")
+    parser.add_option("-s", "--include-speaker", action="store_true", dest="include_speaker", default=False)
+    parser.add_option("-t", "--exclude-tags", action="store_false", dest="include_soundtags", default=True)
 
     (options, args) = parser.parse_args()
 

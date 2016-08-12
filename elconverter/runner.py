@@ -19,16 +19,15 @@ class Runner:
         for json in json_files:
             with open(json, 'r') as f:
                 el = ElementList(f)
-            with open(os.path.splitext(json)[0] + '.srt', 'r') as f:
+            with open(os.path.splitext(json)[0] + '.srt', 'w') as f:
                 f.write(el.to_srt(self.include_speakers, self.include_tags))
                 files.append(f.name)
 
         if len(files) > 1:
-            zipf = zipfile.ZipFile(self.directory + '.zip', 'w', zipfile.ZIP_DEFLATED)
-            for f in files:
-                path = os.path.realpath(f)
-                zipf.write(path)
-            zipf.close()
+            with zipfile.ZipFile(self.directory + '.zip', 'w', zipfile.ZIP_DEFLATED) as zfile:
+                for f in files:
+                    zfile.write(f, os.path.basename(f))
+                    os.remove(f)
             print("Wrote {} files to {}".format(len(files), self.directory + '.zip'))
         else:
-            print("Created {}", files[0])
+            print("Created {}".format(files[0]))
