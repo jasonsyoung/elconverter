@@ -7,13 +7,12 @@ class Runner:
         self.directory = directory
         self.include_speakers = include_speakers
         self.include_tags = include_tags
-        self.run()
 
     def run(self):
         json_files = glob.glob(os.path.join(self.directory, "*.json"))
         if len(json_files) is 0:
             print("No JSON files found to convert", file=sys.stderr)
-            sys.exit(2)
+            return False
 
         files = []
         for json in json_files:

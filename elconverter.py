@@ -30,7 +30,7 @@ def main():
         print("'{}' is not a valid directory".format(args[0]), file=sys.stderr)
         sys.exit(2)
 
-    Runner(directory, options.include_speaker, options.include_soundtags)
+    Runner(directory, options.include_speaker, options.include_soundtags).run()
 
 
 if __name__ == "__main__":
