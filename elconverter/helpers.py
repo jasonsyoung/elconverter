@@ -8,6 +8,7 @@ These classes assist in the conversion
 
 """
 
+
 class ElementList:
     """ represents an Element List"""
 
@@ -84,7 +85,6 @@ class Segment:
 
         lines.append(line.lstrip())
         blocks.append(SRT(start, end, lines))
-
         return map(lambda x: str(x), blocks)
 
 
@@ -118,7 +118,6 @@ class Token:
     TYPE_PUNCTUATION = 'punctuation'
     TYPE_END_SENTENCE = 'ENDS_SENTENCE'
 
-
     def __init__(self, token):
         self.interpolated = token['interpolated']
         self.start_time = token['start_time']
@@ -133,7 +132,6 @@ class Token:
         return self.display_as if len(self.display_as) > 0 else self.value
 
 
-
 class Speaker:
     """ represents a speaker """
 
@@ -141,8 +139,6 @@ class Speaker:
         self.id = speaker['id']
         self.name = speaker['name']
         self.gender = speaker['gender']
-
-
 
 
 def ms_to_timestamp(ms):
