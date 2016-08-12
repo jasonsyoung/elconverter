@@ -60,10 +60,10 @@ class Segment:
                     start = t.start_time
 
                 next_token = str(t)
-                if include_tags and len(t.tags) > 0 and t.tags[0] != Token.TYPE_END_SENTENCE:
-                    next_token = '[{}] {}'.format(t.tags[0], str(t))
+                if include_tags and len(t.tags) > 0 and t.type == Token.TYPE_SOUND:
+                    next_token = '[{}]{}'.format(t.tags[0], ' ' + str(t) if len(str(t)) > 0 else '')
 
-                if t.type != Token.TYPE_PUNCTUATION and len(line) + len(next_token) > Segment.LINE_LENGTH:
+                if t.type != Token.TYPE_PUNCTUATION and len(line) + len(next_token) + 1 > Segment.LINE_LENGTH:
                     if len(lines) == 0:
                         lines.append(line.lstrip())
                         line = ''
@@ -74,7 +74,7 @@ class Segment:
                         lines = []
                         line = ''
 
-                if t.type == 'punctuation':
+                if t.type == Token.TYPE_PUNCTUATION:
                     line = line.rstrip() + next_token
                 elif len(line) == 0:
                     line += next_token
@@ -102,10 +102,8 @@ class Sequence:
     """ represents a sequence """
 
     def __init__(self, sequence):
-        self.interpolated = sequence['interpolated'] if 'interpolated' in sequence else None
         self.start_time = sequence['start_time']
         self.end_time = sequence['end_time']
-        self.confidence_score = sequence['confidence_score'] if 'confidence_score' in sequence else None
         self.tokens = []
         for token in sequence['tokens']:
             self.tokens.append(Token(token))
@@ -115,18 +113,18 @@ class Sequence:
 class Token:
     """ represents a token """
 
+    TYPE_WORD = 'word'
     TYPE_PUNCTUATION = 'punctuation'
-    TYPE_END_SENTENCE = 'ENDS_SENTENCE'
+    TYPE_SOUND = 'sound'
+    TAG_END_SENTENCE = 'ENDS_SENTENCE'
 
     def __init__(self, token):
-        self.interpolated = token['interpolated']
         self.start_time = token['start_time']
         self.end_time = token['end_time']
         self.value = token['value']
         self.type = token['type']
         self.display_as = token['display_as']
         self.tags = token['tags']
-        self.style = token['style'] if 'style' in token else None
 
     def __str__(self):
         return self.display_as if len(self.display_as) > 0 else self.value
