@@ -1,6 +1,13 @@
 import glob, os, sys, zipfile
 from .helpers import ElementList
 
+"""
+
+runner.py
+
+This runs the conversion
+
+"""
 
 class Runner:
     def __init__(self, directory, include_speakers, include_tags):

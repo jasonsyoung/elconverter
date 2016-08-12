@@ -1,5 +1,12 @@
 import json
 
+"""
+
+helpers.py
+
+These classes assist in the conversion
+
+"""
 
 class ElementList:
     """ represents an Element List"""
